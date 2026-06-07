@@ -21,7 +21,7 @@ GROUP BY ORDER_TYPE_ID;
 ```
 
 ## Output
-* [Output Screenshot](https://github.com/vaibhaviupreti-hotwax/mysql-practice/blob/main/resources/P1-Order-output.png)
+* <a href="https://github.com/vaibhaviupreti-hotwax/mysql-practice/blob/main/resources/P1-Order-output.png" target="_blank" rel="noopener">Output Screenshot</a>
 
 ## Resources
-* [Mind Map](https://github.com/vaibhaviupreti-hotwax/mysql-practice/blob/main/resources/P1-order-mindmap.jpg)
+* <a href="https://github.com/vaibhaviupreti-hotwax/mysql-practice/blob/main/resources/P1-order-mindmap.jpg" target="_blank" rel="noopener">Mind Map</a>
