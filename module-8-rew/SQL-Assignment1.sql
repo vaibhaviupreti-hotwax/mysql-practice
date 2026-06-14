@@ -48,4 +48,99 @@ FROM
 WHERE 
   IS_PHYSICAL = 'Y' 
   AND SALES_DISCONTINUATION_DATE IS NULL 
-  OR SALES_DISCONTINUATION_DATE >= NOW()
+  OR SALES_DISCONTINUATION_DATE >= NOW();
+
+-- Q3: Products Missing NetSuite ID
+-- Business Problem:
+-- A product cannot sync to NetSuite unless it has a valid NetSuite ID. The OMS needs a list of all products that still need to be created or updated in NetSuite.
+
+-- Fields to Retrieve:
+
+-- PRODUCT_ID
+-- INTERNAL_NAME
+-- PRODUCT_TYPE_ID
+-- NETSUITE_ID (or similar field indicating the NetSuite ID; may be NULL or empty if missing)
+
+SELECT 
+P.PRODUCT_ID,
+P.INTERNAL_NAME,
+P.PRODUCT_TYPE_ID,
+GI.GOOD_IDENTIFICATION_TYPE_ID AS NETSUITE_ID
+FROM 
+PRODUCT P 
+LEFT JOIN GOOD_IDENTIFICATION GI ON P.PRODUCT_ID = GI.PRODUCT_ID
+AND GI.GOOD_IDENTIFICATION_TYPE_ID = 'NETSUITE_PRODUCT_ID' 
+WHERE GOOD_IDENTIFICATION_TYPE_ID = '' OR GOOD_IDENTIFICATION_TYPE_ID IS NULL;
+
+-- Q4 Product IDs Across Systems
+-- Business Problem:
+-- To sync an order or product across multiple systems (e.g., Shopify, HotWax, ERP/NetSuite), the OMS needs to know each system’s unique identifier for that product. This query retrieves the Shopify ID, HotWax ID, and ERP ID (NetSuite ID) for all products.
+
+-- Fields to Retrieve:
+
+-- PRODUCT_ID (internal OMS ID) --prod
+-- SHOPIFY_ID --sh_prod
+-- HOTWAX_ID prod
+-- ERP_ID or NETSUITE_ID (depending on naming)
+
+SELECT 
+  P.PRODUCT_ID, 
+  P.INTERNAL_NAME, 
+  SHP.SHOP_ID, 
+  SHP.SHOPIFY_PRODUCT_ID, 
+  GID.ID_VALUE AS NETSUITE_ID 
+FROM 
+  PRODUCT P 
+  LEFT JOIN SHOPIFY_SHOP_PRODUCT SHP ON P.PRODUCT_ID = SHP.PRODUCT_ID 
+  LEFT JOIN GOOD_IDENTIFICATION GID ON P.PRODUCT_ID = GID.PRODUCT_ID 
+  AND GID.GOOD_IDENTIFICATION_TYPE_ID = 'NETSUITE_ID';
+
+-- Q5 Completed Orders in August 2025
+-- Business Problem:
+-- After running similar reports for a previous month, you now need all 
+--completed orders in March 2026 for analysis.
+
+-- Fields to Retrieve:
+
+-- PRODUCT_ID --OI
+-- PRODUCT_TYPE_ID --
+-- PRODUCT_STORE_ID --
+-- TOTAL_QUANTITY --ORDER_ITEM
+-- INTERNAL_NAME --PROD
+-- FACILITY_ID -- 
+-- EXTERNAL_ID --ORDER_HEADER
+-- FACILITY_TYPE_ID 
+-- ORDER_ID -- OH
+-- ORDER_ITEM_SEQ_ID --oi
+-- SHIP_GROUP_SEQ_ID -- OISG
+
+SELECT 
+  OH.ORDER_ID,
+  OH.EXTERNAL_ID,
+  OI.ORDER_ITEM_SEQ_ID, 
+  OI.PRODUCT_ID, 
+  OI.QUANTITY, 
+  P.PRODUCT_TYPE_ID, 
+  P.INTERNAL_NAME,
+  FAC.FACILITY_ID,
+  FAC.FACILITY_TYPE_ID
+FROM 
+  ORDER_HEADER OH 
+  JOIN ORDER_STATUS OS ON OH.ORDER_ID = OS.ORDER_ID 
+  AND OS.STATUS_ID = 'ORDER_COMPLETED' 
+  JOIN ORDER_ITEM OI ON OH.ORDER_ID = OI.ORDER_ID 
+  JOIN PRODUCT P ON OI.PRODUCT_ID = P.PRODUCT_ID 
+  JOIN ORDER_ITEM_SHIP_GROUP OISG ON OISG.ORDER_ID = OI.ORDER_ID AND OISG.SHIP_GROUP_SEQ_ID = OI.SHIP_GROUP_SEQ_ID
+  JOIN FACILITY FAC ON OISG.FACILITY_ID = FAC.FACILITY_ID
+WHERE 
+  STATUS_DATETIME <= '2026-03-31' 
+  AND STATUS_DATETIME >= '2026-03-01' 
+  AND OI.STATUS_ID = 'ITEM_COMPLETED'
+
+
+
+
+
+
+
+
