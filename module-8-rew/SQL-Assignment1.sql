@@ -72,6 +72,9 @@ LEFT JOIN GOOD_IDENTIFICATION GI ON P.PRODUCT_ID = GI.PRODUCT_ID
 AND GI.GOOD_IDENTIFICATION_TYPE_ID = 'NETSUITE_PRODUCT_ID' 
 WHERE GOOD_IDENTIFICATION_TYPE_ID = '' OR GOOD_IDENTIFICATION_TYPE_ID IS NULL;
 
+-- Note:
+-- A JOIN returns only matching rows from both tables, while a LEFT JOIN returns all rows from the left table plus matching rows from the right table (filling unmatched right sides with NULL).
+
 -- Q4 Product IDs Across Systems
 -- Business Problem:
 -- To sync an order or product across multiple systems (e.g., Shopify, HotWax, ERP/NetSuite), the OMS needs to know each system’s unique identifier for that product. This query retrieves the Shopify ID, HotWax ID, and ERP ID (NetSuite ID) for all products.
@@ -137,10 +140,25 @@ WHERE
   AND STATUS_DATETIME >= '2026-03-01' 
   AND OI.STATUS_ID = 'ITEM_COMPLETED'
 
+-- 6 Newly Created Sales Orders and Payment Methods
+-- Business Problem:
+-- Finance teams need to see new orders and their payment methods for reconciliation and fraud checks.
 
+-- Fields to Retrieve:
 
+-- ORDER_ID --OPP
+-- TOTAL_AMOUNT --OH
+-- PAYMENT_METHOD --OPP
+-- Shopify Order ID (if applicable) --SSO
 
-
-
+SELECT 
+  OPP.ORDER_ID, 
+  SSO.SHOPIFY_ORDER_ID, 
+  OH.GRAND_TOTAL, 
+  OPP.PAYMENT_METHOD_ID 
+FROM 
+  ORDER_HEADER OH 
+  JOIN SHOPIFY_SHOP_ORDER SSO ON OH.ORDER_ID = SSO.ORDER_ID 
+  JOIN order_payment_preference OPP ON OH.ORDER_ID = OPP.ORDER_ID
 
 
